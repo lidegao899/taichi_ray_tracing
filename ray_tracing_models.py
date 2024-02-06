@@ -86,6 +86,49 @@ class Sphere:
                 hit_point_normal = -hit_point_normal
         return is_hit, root, hit_point, hit_point_normal, front_face, self.material, self.color
 
+# triangle
+@ti.data_oriented
+class Triangle:
+    def __init__(self, v0, v1, v2, material, color):
+        self.v0 = v0
+        self.v1 = v1
+        self.v2 = v2
+        self.material = material
+        self.color = color
+
+    @ti.func
+    def hit(self, ray, t_min=0.001, t_max=10e8):
+        is_hit = False
+        front_face = False
+        root = 0.0
+        hit_point =  ti.Vector([0.0, 0.0, 0.0])
+        hit_point_normal = ti.Vector([0.0, 0.0, 0.0])
+        # Check if the ray hit the plane
+        # The plane is defined by the normal and a point on the plane
+        normal = (self.v1 - self.v0).cross(self.v2 - self.v0).normalized()
+        d = normal.dot(self.v0)
+        denominator = normal.dot(ray.direction)
+        if abs(denominator) > 0.0001:
+            root = (d - normal.dot(ray.origin)) / denominator
+            if root >= t_min and root <= t_max:
+                hit_point = ray.at(root)
+                # Check if the hit point is inside the triangle
+                edge0 = self.v1 - self.v0
+                edge1 = self.v2 - self.v1
+                edge2 = self.v0 - self.v2
+                normal0 = edge0.cross(hit_point - self.v0)
+                normal1 = edge1.cross(hit_point - self.v1)
+                normal2 = edge2.cross(hit_point - self.v2)
+                if normal0.dot(normal1) >= 0 and normal1.dot(normal2) >= 0 and normal2.dot(normal0) >= 0:
+                    is_hit = True
+                    hit_point_normal = normal
+                    # Check which side does the ray hit, we set the hit point normals always point outward from the surface
+                    if ray.direction.dot(hit_point_normal) < 0:
+                        front_face = True
+                    else:
+                        hit_point_normal = -hit_point_normal
+        return is_hit, root, hit_point, hit_point_normal, front_face, self.material, self.color
+
 @ti.data_oriented
 class Hittable_list:
     def __init__(self):

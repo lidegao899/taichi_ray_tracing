@@ -1,7 +1,7 @@
 import taichi as ti
 import numpy as np
 import argparse
-from ray_tracing_models import Ray, Camera, Hittable_list, Sphere, PI
+from ray_tracing_models import Ray, Camera, Hittable_list, Sphere, Triangle, PI
 ti.init(arch=ti.gpu)
 
 PI = 3.14159265
@@ -28,6 +28,16 @@ def render():
         color /= samples_per_pixel
         canvas[i, j] += color
 
+def testTriangle():
+    # Triangle
+    pt1 = ti.Vector([0., -.3, -.5])
+    pt2 = ti.Vector([1, -0.2, -.5])
+    pt3 = ti.Vector([1, 1, .5])
+    hit = ti.Vector([0.013560, 0.504126, -0.500000])
+    scene.add(Triangle(v0=pt1, v1=pt2, v2 = pt3, material=2, color=ti.Vector([1, 0., 0.])))
+    scene.add(Sphere(pt1, radius=0.05, material=2, color=ti.Vector([1, 0., 0.])))
+    scene.add(Sphere(pt2, radius=0.05, material=2, color=ti.Vector([0., 1, 0.])))
+    scene.add(Sphere(pt3, radius=0.05, material=2, color=ti.Vector([0., 0., 1])))
 
 @ti.func
 def to_light_source(hit_point, light_source):
@@ -80,8 +90,10 @@ if __name__ == "__main__":
     # Glass ball
     scene.add(Sphere(center=ti.Vector([0.7, 0, -0.5]), radius=0.5, material=3, color=ti.Vector([1.0, 1.0, 1.0])))
     # Metal ball-2
-    scene.add(Sphere(center=ti.Vector([0.6, -0.3, -2.0]), radius=0.2, material=2, color=ti.Vector([0.8, 0.6, 0.2])))
+    scene.add(Sphere(ti.Vector([0.6, -0.3, -2.0]), radius=0.2, material=2, color=ti.Vector([0.8, 0.6, 0.2])))
 
+    testTriangle()
+ 
     camera = Camera()
     gui = ti.GUI("Ray Tracing", res=(image_width, image_height))
     canvas.fill(0)
